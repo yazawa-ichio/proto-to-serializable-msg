@@ -100,6 +100,15 @@ func (ce *CodeEmitter) EndBracket(text string, p ...interface{}) {
 	ce.buf.WriteString("\n")
 }
 
+func (ce *CodeEmitter) EndAndStartBracket(text string, p ...interface{}) {
+	ce.EndIndent()
+	ce.EmitTab()
+	ce.buf.WriteString("}")
+	ce.f(text, p...)
+	ce.buf.WriteString("{\n")
+	ce.StartIndent()
+}
+
 func (ce *CodeEmitter) String() string {
 	return ce.buf.String()
 }

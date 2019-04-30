@@ -6,6 +6,7 @@ import (
 
 //ProtoConverter is Convert Proto To Language
 type ProtoConverter interface {
+	GetFileName(name string) string
 	GetPackageName(name string) string
 	GetClassName(name string) string
 	GetFieldName(name string) string

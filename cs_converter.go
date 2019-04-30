@@ -16,6 +16,11 @@ func (c *CSConverter) GetPackageName(name string) string {
 	return strcase.ToCamel(name)
 }
 
+// GetFileName is Proto To CSharp Language
+func (c *CSConverter) GetFileName(name string) string {
+	return c.GetClassName(name) + ".cs"
+}
+
 // GetClassName is Proto To CSharp Language
 func (c *CSConverter) GetClassName(name string) string {
 	if strings.HasPrefix(name, ".") {

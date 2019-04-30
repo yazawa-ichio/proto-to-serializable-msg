@@ -25,18 +25,9 @@ func (p *plugin) Generate(r *plugin_go.CodeGeneratorRequest) (*plugin_go.CodeGen
 	data := newProtoData(descriptors)
 
 	//TODO:パラメーター
-	gen := newCSGenerator()
-
-	for _, msg := range data.messages {
-		if msg.parent == nil {
-			resp.File = append(resp.File, gen.genClass(msg))
-		}
-	}
-	for _, enum := range data.enums {
-		if enum.parent == nil {
-			resp.File = append(resp.File, gen.genEnum(enum))
-		}
-	}
+	gen := newJSGenerator()
+	resp.File = append(resp.File, gen.genResponseFile(data)...)
+	resp.File = append(resp.File, newCSGenerator().genResponseFile(data)...)
 
 	return resp, nil
 }

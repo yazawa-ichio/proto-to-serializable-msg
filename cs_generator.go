@@ -10,16 +10,31 @@ import (
 	ce "github.com/yazawa-ichio/protoc-gen-msgpack/code_emitter"
 )
 
-type csClassGenerator struct {
+type csGenerator struct {
 	e    *ce.CodeEmitter
 	conv *CSConverter
 }
 
-func newCSGenerator() *csClassGenerator {
-	return &csClassGenerator{e: new(ce.CodeEmitter), conv: &CSConverter{}}
+func newCSGenerator() *csGenerator {
+	return &csGenerator{e: new(ce.CodeEmitter), conv: &CSConverter{}}
 }
 
-func (g *csClassGenerator) genClass(message *messageData) *plugin_go.CodeGeneratorResponse_File {
+func (g *csGenerator) genResponseFile(data *protoData) []*plugin_go.CodeGeneratorResponse_File {
+	files := []*plugin_go.CodeGeneratorResponse_File{}
+	for _, msg := range data.messages {
+		if msg.parent == nil {
+			files = append(files, g.genClass(msg))
+		}
+	}
+	for _, enum := range data.enums {
+		if enum.parent == nil {
+			files = append(files, g.genEnum(enum))
+		}
+	}
+	return files
+}
+
+func (g *csGenerator) genClass(message *messageData) *plugin_go.CodeGeneratorResponse_File {
 	g.e.Reset()
 	emitFileInfo(g.e, message.file)
 	g.e.EmitLine("using Writer = ILib.ProtoPack.Writer;")
@@ -33,7 +48,7 @@ func (g *csClassGenerator) genClass(message *messageData) *plugin_go.CodeGenerat
 	}
 }
 
-func (g *csClassGenerator) genEnum(enum *enumData) *plugin_go.CodeGeneratorResponse_File {
+func (g *csGenerator) genEnum(enum *enumData) *plugin_go.CodeGeneratorResponse_File {
 	g.e.Reset()
 	emitFileInfo(g.e, enum.file)
 	g.emitEnum(enum)
@@ -45,7 +60,7 @@ func (g *csClassGenerator) genEnum(enum *enumData) *plugin_go.CodeGeneratorRespo
 	}
 }
 
-func (g *csClassGenerator) emitClass(message *messageData) {
+func (g *csGenerator) emitClass(message *messageData) {
 	//Header
 	if message.parent == nil {
 		//TODO:Optional use interface
@@ -86,7 +101,7 @@ func (g *csClassGenerator) emitClass(message *messageData) {
 	g.emitReader(message)
 }
 
-func (g *csClassGenerator) emitEnum(enum *enumData) {
+func (g *csGenerator) emitEnum(enum *enumData) {
 	//Header
 	if enum.parent == nil {
 		if emitNameSpace(g.e, g.conv.GetPackageName(enum.data.GetPackage())) {
@@ -109,7 +124,7 @@ func isObject(f *protokit.FieldDescriptor) bool {
 		f.GetLabel().String() == "LABEL_REPEATED"
 }
 
-func (g *csClassGenerator) emitWriter(message *messageData) {
+func (g *csGenerator) emitWriter(message *messageData) {
 	g.e.NewLine()
 	emitSummary(g.e, "Serialize Message")
 	g.e.EmitLine("public void Write(Writer w)")
@@ -148,7 +163,7 @@ func (g *csClassGenerator) emitWriter(message *messageData) {
 
 }
 
-func (g *csClassGenerator) emitSerialize(f *protokit.FieldDescriptor, suffix string) {
+func (g *csGenerator) emitSerialize(f *protokit.FieldDescriptor, suffix string) {
 	switch f.GetType().String() {
 	case "TYPE_MESSAGE":
 		msgType := g.conv.GetType(f)
@@ -176,7 +191,7 @@ func (g *csClassGenerator) emitSerialize(f *protokit.FieldDescriptor, suffix str
 	}
 }
 
-func (g *csClassGenerator) emitBytesSerialize(f *protokit.FieldDescriptor, suffix string) {
+func (g *csGenerator) emitBytesSerialize(f *protokit.FieldDescriptor, suffix string) {
 	filedName := g.conv.GetFieldName(f.GetName()) + suffix
 	g.e.EmitLine("if (%s == null)", filedName)
 	g.e.Bracket("", func() {
@@ -184,12 +199,7 @@ func (g *csClassGenerator) emitBytesSerialize(f *protokit.FieldDescriptor, suffi
 	})
 	g.e.EmitLine("else")
 	g.e.Bracket("", func() {
-		g.e.EmitLine("var bufLen = %s.Length;", filedName)
-		g.e.EmitLine("w.WriteArrayHeader(bufLen);")
-		g.e.EmitLine("for(var bufIndex = 0; bufIndex < bufLen; bufIndex++)")
-		g.e.Bracket("", func() {
-			g.e.EmitLine("w.Write(%s[bufIndex]);", filedName)
-		})
+		g.e.EmitLine("w.WriteBytes(%s);", filedName)
 	})
 }
 
@@ -218,7 +228,7 @@ func emitSummary(e *ce.CodeEmitter, comment string) bool {
 	return true
 }
 
-func (g *csClassGenerator) emitReader(message *messageData) {
+func (g *csGenerator) emitReader(message *messageData) {
 	g.e.NewLine()
 	emitSummary(g.e, "Deserialize Message")
 	g.e.EmitLine("public void Read(Reader r, bool overridable = false)")
@@ -252,7 +262,7 @@ func (g *csClassGenerator) emitReader(message *messageData) {
 
 }
 
-func (g *csClassGenerator) emitRepeatedDeserialize(f *protokit.FieldDescriptor) {
+func (g *csGenerator) emitRepeatedDeserialize(f *protokit.FieldDescriptor) {
 	filedName := g.conv.GetFieldName(f.GetName())
 	g.e.EmitLine("if(r.IsNull())")
 	g.e.Bracket("", func() {
@@ -275,7 +285,7 @@ func (g *csClassGenerator) emitRepeatedDeserialize(f *protokit.FieldDescriptor) 
 	})
 }
 
-func (g *csClassGenerator) emitDeserialize(f *protokit.FieldDescriptor, suffix string) {
+func (g *csGenerator) emitDeserialize(f *protokit.FieldDescriptor, suffix string) {
 	filedName := g.conv.GetFieldName(f.GetName())
 	switch f.GetType().String() {
 	case "TYPE_MESSAGE":
