@@ -37,8 +37,9 @@ func (g *csGenerator) genResponseFile(data *protoData) []*plugin_go.CodeGenerato
 func (g *csGenerator) genClass(message *messageData) *plugin_go.CodeGeneratorResponse_File {
 	g.e.Reset()
 	emitFileInfo(g.e, message.file)
-	g.e.EmitLine("using Writer = ILib.ProtoPack.Writer;")
-	g.e.EmitLine("using Reader = ILib.ProtoPack.Reader;")
+	g.e.EmitLine("using Writer = ILib.ProtoPack.IWriter;")
+	g.e.EmitLine("using Reader = ILib.ProtoPack.IReader;")
+	g.e.EmitLine("using Provider = ILib.ProtoPack.InstanceProvider;")
 	g.emitClass(message)
 	fileName := g.conv.GetClassName(message.data.GetName()) + ".cs"
 	content := g.e.String()
@@ -127,20 +128,34 @@ func isObject(f *protokit.FieldDescriptor) bool {
 func (g *csGenerator) emitWriter(message *messageData) {
 	g.e.NewLine()
 	emitSummary(g.e, "Serialize Message")
-	g.e.EmitLine("public void Write(Writer w)")
+	g.e.EmitLine("public void Write(Writer w, bool skipable = true)")
 	g.e.StartBracket("")
 	defer g.e.EndBracket("")
 
 	g.e.EmitLine("// Write Map Length")
-	g.e.EmitLine("w.WriteMapHeader(%s);", strconv.Itoa(len(message.data.GetMessageFields())))
+	g.e.Bracket("if (!skipable) ", func() {
+		g.e.EmitLine("w.WriteMapHeader(%s);", strconv.Itoa(len(message.data.GetMessageFields())))
+		g.e.EndAndStartBracket(" else ")
+		g.e.EmitLine("int mapLen = 0;")
+		for _, f := range message.data.GetMessageFields() {
+			filedName := g.conv.GetFieldName(f.GetName())
+			msgType := g.conv.GetType(f)
+			g.e.EmitLine("if(this.%s != default(%s)) mapLen++;", filedName, msgType)
+		}
+		g.e.EmitLine("w.WriteMapHeader(mapLen);")
+	})
 
 	for _, f := range message.data.GetMessageFields() {
 		g.e.EmitLine("")
 		g.e.EmitLine("// Write " + f.GetName())
 		filedName := g.conv.GetFieldName(f.GetName())
+		msgType := g.conv.GetType(f)
+		g.e.StartBracket("if(!skipable || this.%s != default(%s)) ", filedName, msgType)
+
 		if isObject(f) {
 			g.e.EmitLine("var %s = this.%s;", filedName, filedName)
 		}
+
 		g.e.EmitLine("w.WriteTag(%s);", strconv.Itoa(int(f.GetNumber())))
 		if f.GetLabel().String() == "LABEL_REPEATED" {
 			g.e.EmitLine("if (%s == null)", filedName)
@@ -159,6 +174,8 @@ func (g *csGenerator) emitWriter(message *messageData) {
 		} else {
 			g.emitSerialize(f, "")
 		}
+
+		g.e.EndBracket("")
 	}
 
 }
@@ -176,7 +193,7 @@ func (g *csGenerator) emitSerialize(f *protokit.FieldDescriptor, suffix string) 
 		})
 		g.e.EmitLine("else")
 		g.e.Bracket("", func() {
-			g.e.EmitLine("%s.Write(w);", g.conv.GetFieldName(f.GetName())+suffix)
+			g.e.EmitLine("%s.Write(w, skipable);", g.conv.GetFieldName(f.GetName())+suffix)
 		})
 		break
 	case "TYPE_ENUM":
@@ -237,24 +254,26 @@ func (g *csGenerator) emitReader(message *messageData) {
 
 	g.e.EmitLine("// Read Map Length")
 	g.e.EmitLine("var mapLen = r.ReadMapHeader();")
+	g.e.EmitLine("uint tag = 0;")
+	g.e.EmitLine("int index = 0;")
 	g.e.NewLine()
-	g.e.EmitLine("for(int i = 0; i < mapLen; i++)")
+	g.e.EmitLine("while ((tag = r.ReadTag(index++, mapLen)) != 0)")
 	g.e.Bracket("", func() {
-		g.e.EmitLine("var tag = r.ReadTag();")
 		g.e.EmitLine("switch(tag) {")
 		for _, f := range message.data.GetMessageFields() {
-			g.e.Bracket("case %d:", func() {
-				if f.GetLabel().String() == "LABEL_REPEATED" {
-					g.emitRepeatedDeserialize(f)
-				} else {
-					g.emitDeserialize(f, "")
-				}
-				g.e.EmitLine("break;")
-			}, f.GetNumber())
+			g.e.EmitLine("case %d:", f.GetNumber())
+			g.e.StartIndent()
+			if f.GetLabel().String() == "LABEL_REPEATED" {
+				g.emitRepeatedDeserialize(f)
+			} else {
+				g.emitDeserialize(f, "")
+			}
+			g.e.EmitLine("break;")
+			g.e.EndIndent()
 		}
 		g.e.EmitLine("default:")
 		g.e.StartIndent()
-		g.e.EmitLine("r.ReadSkip();")
+		g.e.EmitLine("r.Skip();")
 		g.e.EmitLine("break;")
 		g.e.EndIndent()
 		g.e.EmitLine("}")
@@ -266,20 +285,22 @@ func (g *csGenerator) emitRepeatedDeserialize(f *protokit.FieldDescriptor) {
 	filedName := g.conv.GetFieldName(f.GetName())
 	g.e.EmitLine("if(r.IsNull())")
 	g.e.Bracket("", func() {
-		g.e.EmitLine("%s = r.ReadNil();", filedName)
+		g.e.EmitLine("r.ReadNil();")
+		g.e.EmitLine("this.%s = null;", filedName)
 		g.e.EmitLine("continue;")
 	})
 	g.e.EmitLine("var %s = this.%s;", filedName, filedName)
-	g.e.EmitLine("var arrayLen = r.ReadArrayHeader();")
+	g.e.EmitLine("var _%sLen = r.ReadArrayHeader();", filedName)
 	g.e.EmitLine("if(!overridable || %s == null)", filedName)
 	g.e.Bracket("", func() {
-		g.e.EmitLine("%s = r.NewArray<%s>(arrayLen);", filedName, g.conv.GetTypeImpl(f))
+		g.e.EmitLine("%s = Provider.NewArray<%s>(_%sLen);", filedName, g.conv.GetTypeImpl(f), filedName)
 	})
-	g.e.EmitLine("else if(%s.Length != arrayLen)", filedName)
+	g.e.EmitLine("else if(%s.Length != _%sLen)", filedName, filedName)
 	g.e.Bracket("", func() {
-		g.e.EmitLine("System.Array.Resize(ref %s, arrayLen);", filedName)
+		g.e.EmitLine("System.Array.Resize(ref %s, _%sLen);", filedName, filedName)
 	})
-	g.e.EmitLine("for(int arrayIndex = 0; arrayIndex < arrayLen; arrayIndex++)")
+	g.e.EmitLine("this.%s = %s;", filedName, filedName)
+	g.e.EmitLine("for(int arrayIndex = 0; arrayIndex < _%sLen; arrayIndex++)", filedName)
 	g.e.Bracket("", func() {
 		g.emitDeserialize(f, "[arrayIndex]")
 	})
@@ -295,12 +316,12 @@ func (g *csGenerator) emitDeserialize(f *protokit.FieldDescriptor, suffix string
 		}
 		g.e.EmitLine("if(r.IsNull())")
 		g.e.Bracket("", func() {
-			g.e.EmitLine("%s = r.ReadNil();", filedName+suffix)
+			g.e.EmitLine("%s = r.ReadNil<%s>();", filedName+suffix, g.conv.GetTypeImpl(f))
 			g.e.EmitLine("continue;")
 		})
-		g.e.EmitLine("if(!overridable || %s == null)", filedName+suffix)
+		g.e.EmitLine("if(!overridable || %s == default(%s))", filedName+suffix, g.conv.GetTypeImpl(f))
 		g.e.Bracket("", func() {
-			g.e.EmitLine("%s = r.New<%s>();", filedName+suffix, msgType)
+			g.e.EmitLine("%s = Provider.New<%s>();", filedName+suffix, msgType)
 		})
 		g.e.EmitLine("%s.Read(r, overridable);", filedName+suffix)
 		break
@@ -310,10 +331,13 @@ func (g *csGenerator) emitDeserialize(f *protokit.FieldDescriptor, suffix string
 	case "TYPE_BYTES":
 		g.e.EmitLine("if(r.IsNull())")
 		g.e.Bracket("", func() {
-			g.e.EmitLine("%s = r.ReadNil();", filedName+suffix)
+			g.e.EmitLine("r.ReadNil();")
+			g.e.EmitLine("this.%s = null;", filedName+suffix)
 			g.e.EmitLine("continue;")
 		})
+		g.e.EmitLine("var %s = this.%s;", filedName+suffix, filedName+suffix)
 		g.e.EmitLine("r.ReadBytes(ref %s, overridable);", filedName+suffix)
+		g.e.EmitLine("this.%s = %s;", filedName+suffix, filedName+suffix)
 		break
 	default:
 		g.e.EmitLine("%s = r.Read%s();", g.conv.GetFieldName(f.GetName())+suffix, strings.Title(g.conv.GetTypeImpl(f)))

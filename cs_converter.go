@@ -40,7 +40,18 @@ func (c *CSConverter) GetFieldName(name string) string {
 
 // GetEnumTypeName is Proto To CSharp Language
 func (c *CSConverter) GetEnumTypeName(name string) string {
-	return name
+	if strings.HasPrefix(name, ".") {
+		name = name[1:]
+	}
+	names := strings.Split(name, ".")
+	for i, n := range names {
+		if i == len(names)-1 {
+			names[i] = n
+		} else {
+			names[i] = strcase.ToCamel(n)
+		}
+	}
+	return strings.Join(names, ".")
 }
 
 // GetEnumName is Proto To CSharp Language
@@ -90,6 +101,8 @@ func (c *CSConverter) GetTypeImpl(f *protokit.FieldDescriptor) string {
 		return "int"
 	case "TYPE_SINT64":
 		return "long"
+	case "TYPE_ENUM":
+		return c.GetEnumTypeName(f.GetTypeName())
 	}
 	return c.GetClassName(f.GetTypeName())
 }
