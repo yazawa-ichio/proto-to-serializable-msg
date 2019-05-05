@@ -60,8 +60,12 @@ func (c *JSConverter) GetType(f *protokit.FieldDescriptor) string {
 // GetTypeImpl is Proto To JavaScript Language
 func (c *JSConverter) GetTypeImpl(f *protokit.FieldDescriptor) string {
 	switch f.GetType().String() {
-	case "TYPE_DOUBLE", "TYPE_FLOAT", "TYPE_INT64", "TYPE_UINT64", "TYPE_INT32", "TYPE_FIXED64", "TYPE_FIXED32", "TYPE_UINT32", "TYPE_SFIXED32", "TYPE_SFIXED64", "TYPE_SINT32", "TYPE_SINT64":
+	case "TYPE_INT64", "TYPE_UINT64", "TYPE_INT32", "TYPE_FIXED64", "TYPE_FIXED32", "TYPE_UINT32", "TYPE_SFIXED32", "TYPE_SFIXED64", "TYPE_SINT32", "TYPE_SINT64":
 		return "number"
+	case "TYPE_DOUBLE":
+		return "double"
+	case "TYPE_FLOAT":
+		return "float"
 	case "TYPE_BOOL":
 		return "bool"
 	case "TYPE_STRING":
