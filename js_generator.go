@@ -74,7 +74,7 @@ func (g *jsGenerator) emitDeps(m *protokit.Descriptor) {
 func (g *jsGenerator) emitClass(message *messageData) {
 	g.emitExports(message.data.GetName(), message.data.GetPackage(), message.parent, "class "+message.data.GetName()+" ")
 	g.e.StartIndent()
-	g.e.Bracket("constructor(init) ", func() {
+	g.e.Bracket("constructor(init, pos) ", func() {
 		for _, f := range message.data.GetMessageFields() {
 			if f.GetLabel().String() == "LABEL_REPEATED" {
 				g.e.EmitLine("this.%s = null;", f.GetName())
@@ -100,15 +100,22 @@ func (g *jsGenerator) emitClass(message *messageData) {
 				break
 			}
 		}
-	})
-	g.e.Bracket("static Parse(buf, pos) ", func() {
-		g.e.EmitLine("let reader = buf;")
-		g.e.Bracket("if(Buffer.isBuffer(reader))", func() {
-			g.e.EmitLine("reader = new packer.ProtoReader(buf, pos);")
+		g.e.Bracket("if(Buffer.isBuffer(init))", func() {
+			g.e.EmitLine("this.read(new packer.ProtoReader(init, pos));")
 		})
-		g.e.EmitLine("const instance = new %s();", message.data.GetName())
-		g.e.EmitLine("instance.read(reader);")
-		g.e.EmitLine("return instance;")
+	})
+	g.e.Bracket("pack() ", func() {
+		g.e.EmitLine("const w = packer.defaultWriter;")
+		g.e.EmitLine("w.clear();")
+		g.e.EmitLine("this.write(w);")
+		g.e.EmitLine("return w.toBuffer();")
+	})
+	g.e.Bracket("unpack(buf, pos) ", func() {
+		g.e.Bracket("if(!Buffer.isBuffer(buf))", func() {
+			g.e.EmitLine("this.read(buf);")
+			g.e.EndAndStartBracket(" else ")
+			g.e.EmitLine("this.read(new packer.ProtoReader(buf, pos));")
+		})
 	})
 	g.e.Bracket("write(w) ", func() {
 		g.emitWriter(message)
