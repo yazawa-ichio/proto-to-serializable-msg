@@ -1,0 +1,31 @@
+syntax = "proto3";
+package Forum;
+
+message PostData
+{
+	int32 Id = 1;
+	string Message = 2;
+	User User = 3;
+}
+
+message User
+{
+	int32 Id = 1;
+	string Name = 2;
+	Roll Roll = 3;
+}
+
+message PostForumReq
+{
+	PostData data = 1;
+}
+
+message ForumData
+{
+	repeated PostData data = 1;
+}
+
+enum Roll{
+	Guest = 0;
+	Master = 1;
+}

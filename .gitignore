@@ -1,2 +1,6 @@
 bin/*
 test/*
+sample/server/node_modules/*
+sample/client/obj/*
+sample/client/bin/*
+sample/client/ProtoPack/*
