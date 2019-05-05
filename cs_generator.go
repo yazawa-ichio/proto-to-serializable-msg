@@ -37,8 +37,9 @@ func (g *csGenerator) genResponseFile(data *protoData) []*plugin_go.CodeGenerato
 func (g *csGenerator) genClass(message *messageData) *plugin_go.CodeGeneratorResponse_File {
 	g.e.Reset()
 	emitFileInfo(g.e, message.file)
-	g.e.EmitLine("using Writer = ILib.ProtoPack.IWriter;")
-	g.e.EmitLine("using Reader = ILib.ProtoPack.IReader;")
+	g.e.EmitLine("using ILib.ProtoPack;")
+	g.e.EmitLine("using IWriter = ILib.ProtoPack.IWriter;")
+	g.e.EmitLine("using IReader = ILib.ProtoPack.IReader;")
 	g.e.EmitLine("using Provider = ILib.ProtoPack.InstanceProvider;")
 	g.emitClass(message)
 	fileName := g.conv.GetClassName(message.data.GetName()) + ".cs"
@@ -71,9 +72,9 @@ func (g *csGenerator) emitClass(message *messageData) {
 		}
 	}
 
-	//emit Enum
+	//emit Class
 	emitSummary(g.e, message.data.GetComments().GetLeading())
-	g.e.EmitLine("public partial class " + g.conv.GetClassName(message.data.GetName()))
+	g.e.EmitLine("public partial class " + g.conv.GetClassName(message.data.GetName()) + " : IMessage ")
 	g.e.StartBracket("")
 	defer g.e.EndBracket("")
 
@@ -128,7 +129,7 @@ func isObject(f *protokit.FieldDescriptor) bool {
 func (g *csGenerator) emitWriter(message *messageData) {
 	g.e.NewLine()
 	emitSummary(g.e, "Serialize Message")
-	g.e.EmitLine("public void Write(Writer w, bool skipable = true)")
+	g.e.EmitLine("public void Write(IWriter w, bool skipable = true)")
 	g.e.StartBracket("")
 	defer g.e.EndBracket("")
 
@@ -248,7 +249,7 @@ func emitSummary(e *ce.CodeEmitter, comment string) bool {
 func (g *csGenerator) emitReader(message *messageData) {
 	g.e.NewLine()
 	emitSummary(g.e, "Deserialize Message")
-	g.e.EmitLine("public void Read(Reader r, bool overridable = false)")
+	g.e.EmitLine("public void Read(IReader r, bool overridable = false)")
 	g.e.StartBracket("")
 	defer g.e.EndBracket("")
 

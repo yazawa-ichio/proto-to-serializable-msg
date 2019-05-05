@@ -9,6 +9,7 @@ namespace ILib.MsgPack
 		byte[] m_Buf;
 		int m_Pos;
 		byte m_CurrentFormat;
+		public int CurrentPos { get { return m_Pos; } }
 		public byte CurrentFormat { get { return m_CurrentFormat; } }
 
 		public Reader(byte[] buf, int pos = 0)

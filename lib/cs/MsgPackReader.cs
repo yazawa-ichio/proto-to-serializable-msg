@@ -8,6 +8,7 @@ namespace ILib.ProtoPack
 		static readonly byte[] s_Empty = new byte[0];
 
 		Reader m_Reader;
+		public int Offset { get { return m_Reader.CurrentPos; } }
 
 		public MsgPackReader() : this(s_Empty, 0)
 		{
