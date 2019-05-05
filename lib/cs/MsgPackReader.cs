@@ -1,11 +1,17 @@
 using System;
 using ILib.MsgPack;
 
-namespace ILib.ProtoPack.MsgPack
+namespace ILib.ProtoPack
 {
 	public class MsgPackReader : IReader
 	{
+		static readonly byte[] s_Empty = new byte[0];
+
 		Reader m_Reader;
+
+		public MsgPackReader() : this(s_Empty, 0)
+		{
+		}
 
 		public MsgPackReader(byte[] buf, int offest = 0)
 		{

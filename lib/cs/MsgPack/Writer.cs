@@ -299,7 +299,7 @@ namespace ILib.MsgPack
 
 		public void WriteExt(byte extType, byte[] bytes)
 		{
-			uint length = bytes.Length;
+			uint length = (uint)bytes.Length;
 			if (length == 1)
 			{
 				WriteImpl(Format.FixExt1);
