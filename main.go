@@ -42,6 +42,8 @@ func getGenerator(prm string) (generator, error) {
 		return newJSGenerator(), nil
 	case "cs":
 		return newCSGenerator(), nil
+	case "ts":
+		return newTSGenerator(), nil
 	}
 	return nil, errors.New("not found generator")
 }

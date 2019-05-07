@@ -5,16 +5,22 @@ tests:
 		--csharp_out=./test/output \
 		--js_out=import_style=commonjs_strict,binary:./test/output  \
 		--msgpack_out=cs:./test/msgpack \
+		--msgpack_out=ts:./test/msgpack \
 		--msgpack_out=js:./test/msgpack ./sample/proto/*.proto \
 
 gen-sample:
 	go build -o bin/protoc-gen-msgpack
 	protoc -I./sample/ --plugin=./bin/protoc-gen-msgpack \
 		--msgpack_out=js:./sample/server/proto \
+		--msgpack_out=ts:./sample/server/proto \
 		--msgpack_out=cs:./sample/client/proto ./sample/proto/*.proto \
 
 run-sample: gen-sample;
 	node ./sample/server/index.js
+
+run-sample-ts: gen-sample;
+	tsc --project ./sample/server/
+	node ./sample/server/dist/index.js
 
 run-sample-client: gen-sample;
 	cp -RT lib/cs/ ./sample/client/ProtoPack/
