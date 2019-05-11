@@ -26,7 +26,7 @@ func (p *plugin) Generate(r *plugin_go.CodeGeneratorRequest) (*plugin_go.CodeGen
 
 	data := newProtoData(descriptors)
 
-	gen, err := getGenerator(r.GetParameter())
+	gen, err := getGenerator(r.GetParameter(), data)
 	if err != nil {
 		return nil, err
 	}
@@ -36,14 +36,14 @@ func (p *plugin) Generate(r *plugin_go.CodeGeneratorRequest) (*plugin_go.CodeGen
 	return resp, nil
 }
 
-func getGenerator(prm string) (generator, error) {
+func getGenerator(prm string, data *protoData) (generator, error) {
 	switch prm {
 	case "js":
-		return newJSGenerator(), nil
+		return newJSGenerator(data), nil
 	case "cs":
-		return newCSGenerator(), nil
+		return newCSGenerator(data), nil
 	case "ts":
-		return newTSGenerator(), nil
+		return newTSGenerator(data), nil
 	}
 	return nil, errors.New("not found generator")
 }

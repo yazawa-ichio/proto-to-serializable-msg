@@ -9,6 +9,11 @@ import (
 
 // TSConverter is Proto To TypeScript Language
 type TSConverter struct {
+	data *protoData
+}
+
+func newTSConverter(data *protoData) *TSConverter {
+	return &TSConverter{data: data}
 }
 
 // GetFileName is Proto To TypeScript Language
@@ -50,9 +55,14 @@ func (c *TSConverter) GetEnumName(name string) string {
 
 // GetType is Proto To TypeScript Language
 func (c *TSConverter) GetType(f *protokit.FieldDescriptor) string {
+	mapEntry := c.data.isMapEntry(f)
+	if mapEntry {
+		key, val := c.data.getMapKeyValue(f)
+		return "Map<" + c.GetType(key) + ", " + c.GetType(val) + ">"
+	}
 	repeated := f.GetLabel().String() == "LABEL_REPEATED"
 	if repeated {
-		return c.GetTypeImpl(f) + "[]"
+		return "Array<" + c.GetTypeImpl(f) + ">"
 	}
 	return c.GetTypeImpl(f)
 }
@@ -69,5 +79,22 @@ func (c *TSConverter) GetTypeImpl(f *protokit.FieldDescriptor) string {
 	case "TYPE_BYTES":
 		return "Uint8Array"
 	}
-	return c.GetClassName(f.GetTypeName())
+	typeName := c.GetClassName(f.GetTypeName())
+	if c.data.isUserDefine(f) {
+		typeName = c.importName(typeName)
+	}
+	if f.GetType().String() == "TYPE_MESSAGE" || f.GetType().String() == "TYPE_BYTES" {
+		typeName = typeName + " | null"
+	}
+	return typeName
+}
+
+func (c *TSConverter) formFileName(name string) string {
+	name = c.GetFileName(name)
+	name = name[:len(name)-5]
+	return name
+}
+
+func (c *TSConverter) importName(name string) string {
+	return strings.Replace(c.formFileName(name), ".", "_", -1)
 }

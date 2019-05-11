@@ -17,12 +17,18 @@ message User
 
 message PostForumReq
 {
+	//Data
 	PostData data = 1;
 }
 
 message ForumData
 {
 	repeated PostData data = 1;
+}
+
+message ForumInfo
+{
+	map<int32, User> users = 1;
 }
 
 enum Roll{

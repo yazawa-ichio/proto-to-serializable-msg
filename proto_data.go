@@ -15,6 +15,7 @@ type messageData struct {
 	parent   *protokit.Descriptor
 	children []*messageData
 	enums    []*enumData
+	mapEntry bool
 }
 
 type enumData struct {
@@ -40,14 +41,19 @@ func newProtoData(fds []*protokit.FileDescriptor) *protoData {
 
 func setMessage(p *protoData, file *protokit.FileDescriptor, data *protokit.Descriptor, parent *protokit.Descriptor) *messageData {
 	message := &messageData{file: file, data: data, parent: parent}
-	message.children = []*messageData{}
-	message.enums = []*enumData{}
-	p.messages[data.GetFullName()] = message
-	for _, m := range data.Messages {
-		message.children = append(message.children, setMessage(p, file, m, data))
+	message.mapEntry = data.GetOptions().GetMapEntry()
+	message.children = make([]*messageData, len(data.Messages))
+	message.enums = make([]*enumData, len(data.Enums))
+	fullName := data.GetFullName()
+	if fullName[0] == '.' {
+		fullName = fullName[1:]
 	}
-	for _, e := range data.Enums {
-		message.enums = append(message.enums, setEnum(p, file, e, data))
+	p.messages[fullName] = message
+	for i, m := range data.Messages {
+		message.children[i] = setMessage(p, file, m, data)
+	}
+	for i, e := range data.Enums {
+		message.enums[i] = setEnum(p, file, e, data)
 	}
 	return message
 }
@@ -56,4 +62,54 @@ func setEnum(p *protoData, file *protokit.FileDescriptor, data *protokit.EnumDes
 	enum := &enumData{file: file, data: data, parent: parent}
 	p.enums[data.GetFullName()] = enum
 	return enum
+}
+
+func (d *protoData) isUserDefine(f *protokit.FieldDescriptor) bool {
+	_type := f.GetType().String()
+	if _type == "TYPE_MESSAGE" {
+		if d.getMessageData(f).mapEntry {
+			return false
+		}
+		return true
+	} else if _type == "TYPE_ENUM" {
+		return true
+	}
+	return false
+}
+
+func (d *protoData) getMessageData(f *protokit.FieldDescriptor) *messageData {
+	if f.GetType().String() == "TYPE_MESSAGE" {
+		typeName := f.GetTypeName()
+		if typeName[0] == '.' {
+			typeName = typeName[1:]
+		}
+		m := d.messages[typeName]
+		return m
+	}
+	return nil
+}
+
+func (d *protoData) isMapEntry(f *protokit.FieldDescriptor) bool {
+	if f.GetType().String() == "TYPE_MESSAGE" {
+		m := d.getMessageData(f)
+		if m != nil {
+			return m.mapEntry
+		}
+	}
+	return false
+}
+
+func (d *protoData) getMapKeyValue(f *protokit.FieldDescriptor) (*protokit.FieldDescriptor, *protokit.FieldDescriptor) {
+	m := d.getMessageData(f)
+	var key *protokit.FieldDescriptor
+	var value *protokit.FieldDescriptor
+	for _, field := range m.data.GetMessageFields() {
+		if field.GetName() == "key" {
+			key = field
+		}
+		if field.GetName() == "value" {
+			value = field
+		}
+	}
+	return key, value
 }

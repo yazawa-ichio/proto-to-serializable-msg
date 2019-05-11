@@ -12,16 +12,23 @@ import (
 type tsGenerator struct {
 	e    *ce.CodeEmitter
 	conv *TSConverter
+	data *protoData
 }
 
-func newTSGenerator() *tsGenerator {
-	return &tsGenerator{e: new(ce.CodeEmitter), conv: &TSConverter{}}
+func newTSGenerator(data *protoData) *tsGenerator {
+	return &tsGenerator{
+		e:    new(ce.CodeEmitter),
+		conv: newTSConverter(data),
+		data: data,
+	}
 }
 
 func (g *tsGenerator) genResponseFile(data *protoData) []*plugin_go.CodeGeneratorResponse_File {
 	files := []*plugin_go.CodeGeneratorResponse_File{}
 	for _, msg := range data.messages {
-		files = append(files, g.genClass(msg))
+		if !msg.mapEntry {
+			files = append(files, g.genClass(msg))
+		}
 	}
 	for _, enum := range data.enums {
 		files = append(files, g.genEnum(enum))
@@ -52,42 +59,34 @@ func (g *tsGenerator) emitDeps(m *protokit.Descriptor) {
 	g.e.EmitLine("import * as packer from 'proto-msgpack'")
 	hits := make(map[string]string)
 	for _, f := range m.GetMessageFields() {
-		if !isUserDefine(f) {
-			continue
+		if g.data.isMapEntry(f) {
+			key, val := g.data.getMapKeyValue(f)
+			g.emitImport(hits, key)
+			g.emitImport(hits, val)
+		} else {
+			g.emitImport(hits, f)
 		}
-		name := f.GetTypeName()
-		if _, hit := hits[f.GetTypeName()]; hit {
-			continue
-		}
-		hits[name] = name
-		g.e.EmitLine("import %s = require('./%s');", g.importName(name), g.formFileName(name))
 	}
 }
 
-func (g *tsGenerator) formFileName(name string) string {
-	name = g.conv.GetFileName(name)
-	name = name[:len(name)-5]
-	return name
-}
-
-func (g *tsGenerator) importName(name string) string {
-	return strings.Replace(g.formFileName(name), ".", "_", -1)
+func (g *tsGenerator) emitImport(hits map[string]string, f *protokit.FieldDescriptor) {
+	if !g.data.isUserDefine(f) {
+		return
+	}
+	name := f.GetTypeName()
+	if _, hit := hits[f.GetTypeName()]; hit {
+		return
+	}
+	hits[name] = name
+	g.e.EmitLine("import %s = require('./%s');", g.conv.importName(name), g.conv.formFileName(name))
 }
 
 func (g *tsGenerator) emitClass(message *messageData) {
 	g.emitComment(message.data.GetComments().GetLeading())
 	g.e.StartBracket("declare class %s", message.data.GetName())
 	for _, f := range message.data.GetMessageFields() {
-		typeName := g.conv.GetTypeImpl(f)
-		if isUserDefine(f) {
-			typeName = g.importName(typeName)
-		}
-		if f.GetType().String() == "TYPE_MESSAGE" || f.GetType().String() == "TYPE_BYTES" {
-			typeName = typeName + " | null"
-		}
-		if f.GetLabel().String() == "LABEL_REPEATED" {
-			typeName = "Array<" + typeName + "> | null"
-		}
+		g.emitComment(f.GetComments().GetLeading())
+		typeName := g.conv.GetType(f)
 		g.e.EmitLine("%s: %s;", f.GetName(), typeName)
 	}
 	g.e.EmitLine("constructor(init?: boolean | Buffer, pos?: number) ")

@@ -9,6 +9,11 @@ import (
 
 // JSConverter is Proto To JavaScript Language
 type JSConverter struct {
+	data *protoData
+}
+
+func newJSConverter(data *protoData) *JSConverter {
+	return &JSConverter{data: data}
 }
 
 // GetFileName is Proto To JavaScript Language

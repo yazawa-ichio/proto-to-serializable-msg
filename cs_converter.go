@@ -9,6 +9,11 @@ import (
 
 // CSConverter is Proto To CSharp Language
 type CSConverter struct {
+	data *protoData
+}
+
+func newCSConverter(data *protoData) *CSConverter {
+	return &CSConverter{data: data}
 }
 
 // GetPackageName is Proto To CSharp Language
@@ -61,6 +66,11 @@ func (c *CSConverter) GetEnumName(name string) string {
 
 // GetType is Proto To CSharp Language
 func (c *CSConverter) GetType(f *protokit.FieldDescriptor) string {
+	mapEntry := c.data.isMapEntry(f)
+	if mapEntry {
+		key, val := c.data.getMapKeyValue(f)
+		return "System.Collections.Generic.Dictionary<" + c.GetType(key) + ", " + c.GetType(val) + ">"
+	}
 	repeated := f.GetLabel().String() == "LABEL_REPEATED"
 	if repeated {
 		return c.GetTypeImpl(f) + "[]"

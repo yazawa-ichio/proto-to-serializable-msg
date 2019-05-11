@@ -13,16 +13,23 @@ import (
 type jsGenerator struct {
 	e    *ce.CodeEmitter
 	conv *JSConverter
+	data *protoData
 }
 
-func newJSGenerator() *jsGenerator {
-	return &jsGenerator{e: new(ce.CodeEmitter), conv: &JSConverter{}}
+func newJSGenerator(data *protoData) *jsGenerator {
+	return &jsGenerator{
+		e:    new(ce.CodeEmitter),
+		conv: newJSConverter(data),
+		data: data,
+	}
 }
 
 func (g *jsGenerator) genResponseFile(data *protoData) []*plugin_go.CodeGeneratorResponse_File {
 	files := []*plugin_go.CodeGeneratorResponse_File{}
 	for _, msg := range data.messages {
-		files = append(files, g.genClass(msg))
+		if !msg.mapEntry {
+			files = append(files, g.genClass(msg))
+		}
 	}
 	for _, enum := range data.enums {
 		files = append(files, g.genEnum(enum))
@@ -45,11 +52,6 @@ func (g *jsGenerator) genClass(message *messageData) *plugin_go.CodeGeneratorRes
 	}
 }
 
-func isUserDefine(f *protokit.FieldDescriptor) bool {
-	return f.GetType().String() == "TYPE_MESSAGE" ||
-		f.GetType().String() == "TYPE_ENUM"
-}
-
 func (g *jsGenerator) getRequireName(typeName string) string {
 	name := g.conv.GetFileName(typeName)
 	return strings.Replace(strings.Replace(name, ".", "_", -1), "-", "$", -1)
@@ -58,17 +60,26 @@ func (g *jsGenerator) getRequireName(typeName string) string {
 func (g *jsGenerator) emitDeps(m *protokit.Descriptor) {
 	hits := make(map[string]string)
 	for _, f := range m.GetMessageFields() {
-		if !isUserDefine(f) {
-			continue
+		if g.data.isMapEntry(f) {
+			key, val := g.data.getMapKeyValue(f)
+			g.emitRequire(hits, key)
+			g.emitRequire(hits, val)
+		} else {
+			g.emitRequire(hits, f)
 		}
-		name := f.GetTypeName()
-		if _, hit := hits[f.GetTypeName()]; hit {
-			continue
-		}
-		hits[name] = name
-		//		g.e.EmitLine("const %s = require('./%s');", g.getRequireName(name), g.conv.GetFileName(name))
-		g.e.EmitLine("require('./%s');", g.conv.GetFileName(name))
 	}
+}
+
+func (g *jsGenerator) emitRequire(hits map[string]string, f *protokit.FieldDescriptor) {
+	if !g.data.isUserDefine(f) {
+		return
+	}
+	name := f.GetTypeName()
+	if _, hit := hits[f.GetTypeName()]; hit {
+		return
+	}
+	hits[name] = name
+	g.e.EmitLine("require('./%s');", g.conv.GetFileName(name))
 }
 
 func (g *jsGenerator) emitClass(message *messageData) {
@@ -141,7 +152,7 @@ func (g *jsGenerator) genEnum(enum *enumData) *plugin_go.CodeGeneratorResponse_F
 }
 
 func (g *jsGenerator) emitEnum(enum *enumData) {
-	emitDoc(g.e, enum.data.GetComments().GetLeading())
+	g.emitComment(enum.data.GetComments().GetLeading())
 	g.emitExports(enum.data.GetName(), enum.data.GetPackage(), enum.parent, "")
 	g.e.StartIndent()
 	//	g.e.StartBracket("const %s = ", enum.data.GetName())
@@ -166,18 +177,6 @@ func (g *jsGenerator) emitComment(comment string) bool {
 		g.e.EmitLine(c)
 	}
 	g.e.EmitLine("*/")
-	return true
-}
-
-func emitDoc(e *ce.CodeEmitter, comment string) bool {
-	if comment == "" {
-		return false
-	}
-	e.EmitLine("/**")
-	for _, c := range strings.Split(comment, "\n") {
-		e.EmitLine(" *" + c)
-	}
-	e.EmitLine(" */")
 	return true
 }
 
@@ -212,7 +211,20 @@ func (g *jsGenerator) emitWriter(message *messageData) {
 		g.e.EmitLine("// Write " + f.GetName())
 		filedName := g.conv.GetFieldName(f.GetName())
 		g.e.EmitLine("w.writeTag(%s);", strconv.Itoa(int(f.GetNumber())))
-		if f.GetLabel().String() == "LABEL_REPEATED" {
+
+		if g.data.isMapEntry(f) {
+			g.e.Bracket("if (this.%s == null) ", func() {
+				g.e.EmitLine("w.writeNil();")
+				g.e.EndAndStartBracket(" else ")
+				g.e.EmitLine("const mapLen = this.%s.size;", filedName)
+				g.e.EmitLine("w.WriteMapHeader(mapLen);")
+				g.e.StartBracket("this.%s.forEach(function(value, key)", filedName)
+				mapKey, mapVal := g.data.getMapKeyValue(f)
+				g.emitSerialize(mapKey, "", false)
+				g.emitSerialize(mapVal, "", false)
+				g.e.EndBracket(");")
+			}, filedName)
+		} else if f.GetLabel().String() == "LABEL_REPEATED" {
 			g.e.Bracket("if (this.%s == null) ", func() {
 				g.e.EmitLine("w.writeNil();")
 				g.e.EndAndStartBracket(" else ")
@@ -220,38 +232,42 @@ func (g *jsGenerator) emitWriter(message *messageData) {
 				g.e.EmitLine("w.writeArrayHeader(arrayLen);")
 				g.e.EmitLine("for(let arrayIndex = 0; arrayIndex < arrayLen; arrayIndex++)")
 				g.e.Bracket("", func() {
-					g.emitSerialize(f, "[arrayIndex]")
+					g.emitSerialize(f, "[arrayIndex]", true)
 				})
 			}, filedName)
 		} else {
-			g.emitSerialize(f, "")
+			g.emitSerialize(f, "", true)
 		}
 	}
 }
 
-func (g *jsGenerator) emitSerialize(f *protokit.FieldDescriptor, suffix string) {
-	filedName := g.conv.GetFieldName(f.GetName()) + suffix
+func (g *jsGenerator) emitSerialize(f *protokit.FieldDescriptor, suffix string, field bool) {
+	prefix := ""
+	if field {
+		prefix = "this."
+	}
+	filedName := prefix + g.conv.GetFieldName(f.GetName()) + suffix
 	typeName := strings.Title(g.conv.GetTypeImpl(f))
 	switch f.GetType().String() {
 	case "TYPE_MESSAGE":
-		g.e.Bracket("if (!this.%s) ", func() {
+		g.e.Bracket("if (!%s) ", func() {
 			g.e.EmitLine("w.writeNil();")
 			g.e.EndAndStartBracket(" else ")
-			g.e.EmitLine("this.%s.write(w);", filedName)
+			g.e.EmitLine("%s.write(w);", filedName)
 		}, filedName)
 		break
 	case "TYPE_BYTES":
-		g.e.Bracket("if (!this.%s) ", func() {
+		g.e.Bracket("if (!%s) ", func() {
 			g.e.EmitLine("w.writeNil();")
 			g.e.EndAndStartBracket(" else ")
-			g.e.EmitLine("w.writeBytes(this.%s);", filedName)
+			g.e.EmitLine("w.writeBytes(%s);", filedName)
 		}, filedName)
 		break
 	case "TYPE_ENUM":
-		g.e.EmitLine("w.writeNumber(this.%s);", filedName)
+		g.e.EmitLine("w.writeNumber(%s);", filedName)
 		break
 	default:
-		g.e.EmitLine("w.write%s(this.%s);", typeName, filedName)
+		g.e.EmitLine("w.write%s(%s);", typeName, filedName)
 		break
 	}
 }
@@ -266,10 +282,12 @@ func (g *jsGenerator) emitReader(message *messageData) {
 		for _, f := range message.data.GetMessageFields() {
 			g.e.EmitLine("case %d:", f.GetNumber())
 			g.e.StartIndent()
-			if f.GetLabel().String() == "LABEL_REPEATED" {
+			if g.data.isMapEntry(f) {
+				g.emitMapDeserialize(f)
+			} else if f.GetLabel().String() == "LABEL_REPEATED" {
 				g.emitRepeatedDeserialize(f)
 			} else {
-				g.emitDeserialize(f, "")
+				g.emitDeserialize(f, "", true)
 			}
 			g.e.EmitLine("break;")
 			g.e.EndIndent()
@@ -284,6 +302,27 @@ func (g *jsGenerator) emitReader(message *messageData) {
 
 }
 
+func (g *jsGenerator) emitMapDeserialize(f *protokit.FieldDescriptor) {
+	filedName := g.conv.GetFieldName(f.GetName())
+	key, value := g.data.getMapKeyValue(f)
+	g.e.Bracket("if(r.isNull()) ", func() {
+		g.e.EmitLine("r.readNil();")
+		g.e.EmitLine("this.%s = null;", filedName)
+		g.e.EmitLine("continue;")
+	})
+
+	g.e.EmitLine("const _%sLen = r.readMapHeader();", filedName)
+	g.e.EmitLine("this.%s = new Map();", filedName)
+	g.e.Bracket("for(let mapIndex = 0; mapIndex < _%sLen; mapIndex++) ", func() {
+		g.e.EmitLine("let key;")
+		g.e.EmitLine("let value;")
+		g.emitDeserialize(key, "", false)
+		g.emitDeserialize(value, "", false)
+		g.e.EmitLine("this.%s.set(key, value);", filedName)
+
+	}, filedName)
+}
+
 func (g *jsGenerator) emitRepeatedDeserialize(f *protokit.FieldDescriptor) {
 	filedName := g.conv.GetFieldName(f.GetName())
 	g.e.Bracket("if(r.isNull()) ", func() {
@@ -294,12 +333,16 @@ func (g *jsGenerator) emitRepeatedDeserialize(f *protokit.FieldDescriptor) {
 	g.e.EmitLine("const _%sLen = r.readArrayHeader();", filedName)
 	g.e.EmitLine("this.%s = new Array(_%sLen);", filedName, filedName)
 	g.e.Bracket("for(let arrayIndex = 0; arrayIndex < _%sLen; arrayIndex++) ", func() {
-		g.emitDeserialize(f, "[arrayIndex]")
+		g.emitDeserialize(f, "[arrayIndex]", true)
 	}, filedName)
 }
 
-func (g *jsGenerator) emitDeserialize(f *protokit.FieldDescriptor, suffix string) {
-	filedName := g.conv.GetFieldName(f.GetName())
+func (g *jsGenerator) emitDeserialize(f *protokit.FieldDescriptor, suffix string, field bool) {
+	prefix := ""
+	if field {
+		prefix = "this."
+	}
+	filedName := prefix + g.conv.GetFieldName(f.GetName()) + suffix
 	switch f.GetType().String() {
 	case "TYPE_MESSAGE":
 		msgType := g.conv.GetType(f)
@@ -308,25 +351,25 @@ func (g *jsGenerator) emitDeserialize(f *protokit.FieldDescriptor, suffix string
 		}
 		g.e.Bracket("if(r.isNull()) ", func() {
 			g.e.EmitLine("r.readNil();")
-			g.e.EmitLine("this.%s = null;", filedName+suffix)
-			g.e.EmitLine("continue;")
+			g.e.EmitLine("%s = null;", filedName+suffix)
+			g.e.EndAndStartBracket(" else ")
+			g.e.EmitLine("%s = new packer.proto.%s();", filedName+suffix, msgType)
+			g.e.EmitLine("%s.read(r);", filedName+suffix)
 		})
-		g.e.EmitLine("this.%s = new packer.proto.%s();", filedName+suffix, msgType)
-		g.e.EmitLine("this.%s.read(r);", filedName+suffix)
 		break
 	case "TYPE_ENUM":
-		g.e.EmitLine("this.%s = r.readNumber();", filedName+suffix)
+		g.e.EmitLine("%s = r.readNumber();", filedName+suffix)
 		break
 	case "TYPE_BYTES":
 		g.e.Bracket("if(r.isNull()) ", func() {
 			g.e.EmitLine("r.readNil();")
-			g.e.EmitLine("this.%s = null;", filedName+suffix)
-			g.e.EmitLine("continue;")
+			g.e.EmitLine("%s = null;", filedName+suffix)
+			g.e.EndAndStartBracket(" else ")
+			g.e.EmitLine("%s = r.readBytes();", filedName+suffix)
 		})
-		g.e.EmitLine("this.%s = r.readBytes();", filedName+suffix)
 		break
 	default:
-		g.e.EmitLine("this.%s = r.read%s();", g.conv.GetFieldName(f.GetName())+suffix, strings.Title(g.conv.GetTypeImpl(f)))
+		g.e.EmitLine("%s = r.read%s();", filedName, strings.Title(g.conv.GetTypeImpl(f)))
 		break
 	}
 }
