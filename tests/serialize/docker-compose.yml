@@ -1,0 +1,10 @@
+version: '3'
+services:
+  go_server:
+    build: go
+    ports:
+      - 9001:9001
+  ts_server:
+    build: ts
+    ports:
+      - 9002:9002

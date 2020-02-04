@@ -29,9 +29,19 @@ message ForumData
 message ForumInfo
 {
 	map<int32, User> users = 1;
+
+	message forum_nest_info
+	{
+		map<int32, PostData> user_post = 1;
+	}
 }
 
+
+
+//ロールです
 enum Roll{
+	//ゲスト
 	Guest = 0;
+	//マスター
 	Master = 1;
 }

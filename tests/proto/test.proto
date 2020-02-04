@@ -1,0 +1,91 @@
+syntax = "proto3";
+
+import "tests/proto/import.proto";
+
+message all_parameter
+{
+	double value_double = 1;
+	float value_float = 2;
+	int32 value_int32 = 3;
+	int64 value_int64 = 4;
+	uint32 value_uint32 = 5;
+	uint64 value_uint64 = 6;
+	sint32 value_sint32 = 7;
+	sint64 value_sint64 = 8;
+	fixed32 value_fixed32 = 9;
+	fixed64 value_fixed64 = 10;
+	sfixed32 value_sfixed32 = 11;
+	sfixed64 value_sfixed64 = 12;
+	bool value_bool = 13;
+	string value_string = 14;
+	bytes value_bytes = 15;
+	map<int32, string> value_map_string = 16;
+	map<string, int32> value_map_int = 17;
+	empty_message value_message = 18;
+	map<int32, DependTest> value_map_value_message = 19;
+	TestEnum value_testEnum = 20;
+}
+
+message AllRepeatedParameter
+{
+	repeated double value_double = 1;
+	repeated float value_float = 2;
+	repeated int32 value_int32 = 3;
+	repeated int64 value_int64 = 4;
+	repeated uint32 value_uint32 = 5;
+	repeated uint64 value_uint64 = 6;
+	repeated sint32 value_sint32 = 7;
+	repeated sint64 value_sint64 = 8;
+	repeated fixed32 value_fixed32 = 9;
+	repeated fixed64 value_fixed64 = 10;
+	repeated sfixed32 value_sfixed32 = 11;
+	repeated sfixed64 value_sfixed64 = 12;
+	repeated bool value_bool = 13;
+	repeated string value_string = 14;
+	repeated bytes value_bytes = 15;
+	repeated DependTest ValueNestMessage = 18;
+	repeated TestEnum ValueTestEnum = 20;
+}
+
+message empty_message
+{
+}
+
+// comment
+enum TestEnum
+{
+	// TEST_NONE 0 comment
+	TEST_NONE = 0;
+	// TestValue 0 comment
+	// 2Line
+	TestValue = 1;
+	snake_test_value = 2;
+}
+
+// UpperCamelCase comment
+message UpperCamelCase
+{
+	int32 UpperCamelCaseField = 1;
+}
+
+// lowerCamelCase comment
+message lowerCamelCase
+{
+	int32 lowerCamelCaseField = 1;
+}
+
+message snake_case
+{
+	int32 snake_case_value = 1;
+
+	message nest_snake_case
+	{
+		int32 nest_snake_case_value = 1;
+	}
+
+}
+
+message DependTest
+{
+	DependMessage msg = 1000;
+}

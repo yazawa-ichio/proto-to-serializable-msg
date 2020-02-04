@@ -1,16 +1,15 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 const http = require("http");
-const ForumReq = require("../proto/forum.postforumreq");
-const ForumData = require("../proto/forum.forumdata");
-const postForumData = new ForumData();
+const Forum = require("../proto/forum");
+const postForumData = new Forum.ForumData();
 postForumData.data = new Array();
 http.createServer(function (req, res) {
     if (req.url == "/forum/postdata") {
         const chunks = new Array();
         req.on('data', chunk => chunks.push(chunk));
         req.on('end', () => {
-            const reqData = new ForumReq(Buffer.concat(chunks));
+            const reqData = new Forum.PostForumReq(Buffer.concat(chunks));
             console.log('ReqData: ', reqData);
             if (postForumData.data != null) {
                 postForumData.data.push(reqData.data);

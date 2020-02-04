@@ -1,10 +1,10 @@
-# (WIP)protoc-gen-msgpack
+# proto-to-serializable-msg
 proto file compile simple message struct and MessagePack serializer
 
-## 作業中
+## 概要
 protoファイルからメッセージ定義（クラス定義）とMessagePackの静的なシリアライザーを出力します。  
-現在、C#とNodeJs用を概ね作成。あとはTypeScriptとgolang用を作成予定。  
-golangとNodeJsとTypeScriptの勉強目的で作成中。  
+C#とJavaScript/TypeScript(NodeJs)とgolangで利用できます。
+protocを利用しないためシングルバイナリで動作します。
 
 ### なにに使うの？
 主にゲーム等のリアルタイム通信系でHTTPではなくUDP等を併用するケースで使用する目的で作成しました。  
@@ -19,9 +19,52 @@ protoファイルを使うのであれば、gRPCを避ける必要がない気�
 
 ```
 # get
-go get github.com/yazawa-ichio/protoc-gen-msgpack
+go get github.com/yazawa-ichio/proto-to-serializable-msg
 # gen message
-protoc -I. --msgpack_out=cs:./output/cs --msgpack_out=js:./output/js *.proto
+proto-to-serializable-msg -lang cs -input ./input/proto -output ./out/proto
+# use Config
+proto-to-serializable-msg -c ./proto-config.yml
 ```
 
+### Option
 
+|Short|Long||
+|---|---|---|
+|-l|-lang|[generate language](#Lang)|
+|-i|-input|input dir or *.proto file|
+|-o|-output|output dir|
+|-d|-dryrun|output dryrun|
+|-c|-config|[generate use config.yml](#Config)|
+
+#### Lang
+
+|short|long|
+|---|---|
+|cs|csharp|
+|js|javascript|
+|ts|typescript|
+|go|golang|
+
+#### Config
+
+[sample config](./tests/config/proto-config.yml)
+
+```yml
+input: "../proto"
+lang:
+  go:
+    output: "./out/go/proto"
+  csharp:
+    output: "./out/cs/proto"
+    property: false
+    serializable: true
+  js:
+    output: "./out/ts/proto"
+    use_ts: true
+    disable_package_to_dir: false
+```
+
+## [CREDITS](./CREDITS)
+Thanks to the developers of the packages used to create this software.
+
+## [LICENSE](./LICENSE)

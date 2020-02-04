@@ -60,6 +60,12 @@ func (ce *CodeEmitter) EmitTab() {
 	ce.buf.WriteString(strings.Repeat(tab, ce.indentCount))
 }
 
+func (ce *CodeEmitter) EmitIndentLine(text string, p ...interface{}) {
+	ce.indentCount++
+	ce.EmitLine(text, p...)
+	ce.indentCount--
+}
+
 func (ce *CodeEmitter) Emit(text string, p ...interface{}) {
 	ce.EmitTab()
 	ce.f(text, p...)

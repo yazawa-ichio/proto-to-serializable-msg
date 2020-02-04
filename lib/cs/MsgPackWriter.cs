@@ -94,10 +94,23 @@ namespace ILib.ProtoPack
 			m_Writer.Write(val);
 		}
 
-		public void WriteBytes(byte[] val)
+		public void Write(byte[] val)
 		{
 			m_Writer.Write(val);
 		}
+
+		public void Write(IMessage val)
+		{
+			if(val == null)
+			{
+				WriteNil();
+			}
+			else
+			{
+				val.Write(this);
+			}
+		}
+
 	}
 
 }

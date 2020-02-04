@@ -34,16 +34,12 @@ namespace ILib.ProtoPack
 			m_Reader.Skip();
 		}
 
-		public uint ReadTag(int index, int length)
+		public uint ReadTag()
 		{
-			if (index < length)
-			{
-				return ReadUint();
-			}
-			return 0;
+			return ReadUint();
 		}
 
-		public bool IsNull()
+		public bool NextFormatIsNull()
 		{
 			return m_Reader.NextFormat() == Format.Nil;
 		}
@@ -56,27 +52,28 @@ namespace ILib.ProtoPack
 			}
 		}
 
-		public T ReadNil<T>()
+		public T ReadMessage<T>() where T : IMessage, new()
 		{
-			if (m_Reader.ReadFormat() != Format.Nil)
+			if (m_Reader.NextFormat() == Format.Nil)
 			{
-				throw new InvalidOperationException(MissMatchErrorText());
+				ReadNil();
+				return default(T);
 			}
-			return default(T);
+			else
+			{
+ 				var ret = new T();
+				ret.Read(this);
+				return ret;
+			}
 		}
 
-		public T New<T>() where T : new()
+		public byte[] ReadBytes()
 		{
-			return new T();
-		}
-
-		public T[] NewArray<T>(int length)
-		{
-			return new T[length];
-		}
-
-		public void ReadBytes(ref byte[] buf, bool overridable)
-		{
+			if (m_Reader.NextFormat() == Format.Nil)
+			{
+				ReadNil();
+				return null;
+			}
 			ArraySegment<byte> source;
 			switch (m_Reader.ReadFormat())
 			{
@@ -92,15 +89,9 @@ namespace ILib.ProtoPack
 				default:
 					throw new InvalidOperationException(MissMatchErrorText());
 			}
-			if (buf == null || !overridable)
-			{
-				buf = new byte[source.Count];
-			}
-			else if (buf.Length != source.Count)
-			{
-				Array.Resize(ref buf, source.Count);
-			}
+			var buf = new byte[source.Count];
 			Buffer.BlockCopy(source.Array, source.Offset, buf, 0, source.Count);
+			return buf;
 		}
 
 		public bool ReadBool()
@@ -140,6 +131,8 @@ namespace ILib.ProtoPack
 					return m_Reader.ReadUInt16();
 				case Format.UInt32:
 					return m_Reader.ReadUInt32();
+				case Format.UInt64:
+					return (long)m_Reader.ReadUInt64();
 				case Format.Int8:
 					return m_Reader.ReadInt8();
 				case Format.Int16:

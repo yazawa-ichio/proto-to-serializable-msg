@@ -1,0 +1,11 @@
+syntax = "proto3";
+
+package DepDep;
+
+import "tests/proto/import.proto";
+
+message DependTestMessage
+{
+	PackageMessage message = 100;
+	DependMessage dep_dep = 101;
+}

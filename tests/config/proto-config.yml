@@ -1,0 +1,21 @@
+input: "../proto"
+lang:
+  go:
+    output: "./out/go"
+  golang:
+    output: "./out/go_root"
+    root: "github.com/yazawa-ichio/protoc-gen-msgpack/tests/config/out/go_root"
+  cs:
+    output: "./out/cs"
+  csharp:
+    output: "./out/cs_prop"
+    property: true
+    serializable: true
+  js:
+    output: "./out/js"
+    use_ts: true
+    disable_package_to_dir: true
+  javascript:
+    output: "./out/js_skip"
+    skip_serializer: true
+    use_ts: true

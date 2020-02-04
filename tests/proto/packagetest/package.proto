@@ -1,0 +1,14 @@
+syntax = "proto3";
+
+package MyPackage;
+
+message MyMessage
+{
+
+}
+
+enum MyEnum
+{
+	NONE = 0;
+	VALUT = 2;
+}

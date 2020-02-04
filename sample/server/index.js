@@ -1,9 +1,8 @@
 const http = require('http');
-const ForumReq = require("./proto/forum.postforumreq");
-const ForumData = require("./proto/forum.forumdata");
+const proto = require("./proto");
 
 
-const postForumData = new ForumData();
+const postForumData = new proto.Forum.ForumData();
 postForumData.data = []
 
 http.createServer(function (req, res) {
@@ -12,7 +11,7 @@ http.createServer(function (req, res) {
 		const chunks = [];
 		req.on('data', chunk => chunks.push(chunk));
 		req.on('end', () => {
-			const reqData = new ForumReq(Buffer.concat(chunks));
+			const reqData = new proto.Forum.PostForumReq(Buffer.concat(chunks));
 			console.log('ReqData: ', reqData);
 			postForumData.data.push(reqData.data);
 			res.writeHead(200, { 'Content-Type': 'application/x-msgpack' });

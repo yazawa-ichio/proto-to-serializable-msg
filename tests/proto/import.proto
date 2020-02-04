@@ -1,0 +1,14 @@
+syntax = "proto3";
+
+import "tests/proto/packagetest/package.proto";
+
+message DependMessage
+{
+	string text = 500;
+}
+
+message PackageMessage
+{
+	MyPackage.MyMessage message = 100;
+	MyPackage.MyEnum myEnum = 101;
+}

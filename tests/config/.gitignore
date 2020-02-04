@@ -1,0 +1,9 @@
+bin/*
+obj/*
+out/cs/bin/*
+out/cs/obj/*
+out/cs_prop/bin/*
+out/cs_prop/obj/*
+*.exe
+*.dll
+node_modules/*

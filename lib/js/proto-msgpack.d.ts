@@ -21,7 +21,7 @@ export class ProtoReader {
 	readString(): string;
 	readArrayHeader(): number;
 	readMapHeader(): number;
-	readSkip(): void;
+	skip(): void;
 }
 
 
