@@ -1,5 +1,26 @@
 /// <reference types="node" />
 import * as packer from 'proto-msgpack'
+export class DependMessage{
+	text: string;
+	constructor(init?: boolean | Buffer, pos?: number) 
+	pack(): Buffer;
+	unpack(buf: Buffer, pos?: number): void;
+	write(w: packer.ProtoWriter): void;
+	read(r: packer.ProtoReader): void;
+}
+export namespace DependMessage {
+}
+export class PackageMessage{
+	message: MyPackage.MyMessage | null;
+	myEnum: MyPackage.MyEnum;
+	constructor(init?: boolean | Buffer, pos?: number) 
+	pack(): Buffer;
+	unpack(buf: Buffer, pos?: number): void;
+	write(w: packer.ProtoWriter): void;
+	read(r: packer.ProtoReader): void;
+}
+export namespace PackageMessage {
+}
 export class AllParameter{
 	valueDouble: number;
 	valueFloat: number;
@@ -134,27 +155,6 @@ export enum TestEnum{
 	 */
 	TESTVALUE = 1,
 	SNAKE_TEST_VALUE = 2
-}
-export class DependMessage{
-	text: string;
-	constructor(init?: boolean | Buffer, pos?: number) 
-	pack(): Buffer;
-	unpack(buf: Buffer, pos?: number): void;
-	write(w: packer.ProtoWriter): void;
-	read(r: packer.ProtoReader): void;
-}
-export namespace DependMessage {
-}
-export class PackageMessage{
-	message: MyPackage.MyMessage | null;
-	myEnum: MyPackage.MyEnum;
-	constructor(init?: boolean | Buffer, pos?: number) 
-	pack(): Buffer;
-	unpack(buf: Buffer, pos?: number): void;
-	write(w: packer.ProtoWriter): void;
-	read(r: packer.ProtoReader): void;
-}
-export namespace PackageMessage {
 }
 
 export namespace DepDep {

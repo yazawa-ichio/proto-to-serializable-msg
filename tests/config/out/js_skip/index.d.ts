@@ -3,6 +3,19 @@ import * as packer from 'proto-msgpack'
 import * as DepDep from './depdep'
 import * as MyPackage from './mypackage'
 
+export class DependMessage{
+	text: string;
+	constructor(init?: boolean | Buffer, pos?: number) 
+}
+export namespace DependMessage {
+}
+export class PackageMessage{
+	message: MyPackage.MyMessage | null;
+	myEnum: MyPackage.MyEnum;
+	constructor(init?: boolean | Buffer, pos?: number) 
+}
+export namespace PackageMessage {
+}
 export class AllParameter{
 	valueDouble: number;
 	valueFloat: number;
@@ -105,17 +118,4 @@ export enum TestEnum{
 	 */
 	TESTVALUE = 1,
 	SNAKE_TEST_VALUE = 2
-}
-export class DependMessage{
-	text: string;
-	constructor(init?: boolean | Buffer, pos?: number) 
-}
-export namespace DependMessage {
-}
-export class PackageMessage{
-	message: MyPackage.MyMessage | null;
-	myEnum: MyPackage.MyEnum;
-	constructor(init?: boolean | Buffer, pos?: number) 
-}
-export namespace PackageMessage {
 }

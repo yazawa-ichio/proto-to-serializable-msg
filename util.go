@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"sort"
 	"strings"
 
 	"github.com/jhump/protoreflect/desc"
@@ -64,6 +65,7 @@ func isUserDefine(f *desc.FieldDescriptor) bool {
 }
 
 func parseFiles(files []string) ([]*desc.FileDescriptor, error) {
+	sort.Strings(files)
 	p := &protoparse.Parser{}
 	p.IncludeSourceCodeInfo = true
 	return p.ParseFiles(files...)

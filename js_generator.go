@@ -28,8 +28,18 @@ func (g *JSGenerator) Generate(files []string) ([]*GenerateFile, error) {
 	if err != nil {
 		return nil, err
 	}
+
+	parsedList := make([]string, len(parsed))
+	parsedMap := make(map[string]*desc.FileDescriptor, len(parsed))
+	for i, f := range parsed {
+		parsedList[i] = f.GetFile().GetName()
+		parsedMap[f.GetFile().GetName()] = f
+	}
+	sort.Strings(parsedList)
+
 	packages := make(map[string][]desc.Descriptor, 0)
-	for _, f := range parsed {
+	for _, fileName := range parsedList {
+		f := parsedMap[fileName]
 		list, ok := packages[f.GetPackage()]
 		if !ok {
 			list = make([]desc.Descriptor, 0)
