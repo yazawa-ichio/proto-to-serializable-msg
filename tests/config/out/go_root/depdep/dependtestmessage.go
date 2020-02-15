@@ -3,8 +3,8 @@
 package depdep
 
 import (
-	protopack "github.com/yazawa-ichio/protoc-gen-msgpack/lib/golang"
-	proto "github.com/yazawa-ichio/protoc-gen-msgpack/tests/config/out/go_root"
+	protopack "github.com/yazawa-ichio/proto-to-serializable-msg/lib/golang"
+	proto "github.com/yazawa-ichio/proto-to-serializable-msg/tests/config/out/go_root"
 )
 
 type DependTestMessage struct {

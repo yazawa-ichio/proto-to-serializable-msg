@@ -3,8 +3,8 @@
 package proto
 
 import (
-	protopack "github.com/yazawa-ichio/protoc-gen-msgpack/lib/golang"
-	mypackage "github.com/yazawa-ichio/protoc-gen-msgpack/tests/config/out/go_root/mypackage"
+	protopack "github.com/yazawa-ichio/proto-to-serializable-msg/lib/golang"
+	mypackage "github.com/yazawa-ichio/proto-to-serializable-msg/tests/config/out/go_root/mypackage"
 )
 
 type PackageMessage struct {

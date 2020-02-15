@@ -3,7 +3,7 @@
 package proto
 
 import (
-	protopack "github.com/yazawa-ichio/protoc-gen-msgpack/lib/golang"
+	protopack "github.com/yazawa-ichio/proto-to-serializable-msg/lib/golang"
 )
 
 type Forum_ForumData struct {
@@ -22,13 +22,13 @@ func (m *Forum_ForumData) Write(w protopack.Writer) error {
 	if err != nil {
 		return err
 	}
-	
+
 	// Write data
 	err = w.WriteTag(1)
 	if err != nil {
 		return err
 	}
-	if m.Data == nil{
+	if m.Data == nil {
 		err = w.WriteNil()
 		if err != nil {
 			return err
@@ -50,7 +50,7 @@ func (m *Forum_ForumData) Write(w protopack.Writer) error {
 }
 
 // Unpack Serialize Message
-func (m *Forum_ForumData) Unpack(buf []byte) (error) {
+func (m *Forum_ForumData) Unpack(buf []byte) error {
 	return protopack.Unpack(m, buf)
 }
 
@@ -72,7 +72,7 @@ func (m *Forum_ForumData) Read(r protopack.Reader) error {
 
 		switch tag {
 		case 1: // Read data
-			isArrayNil, err := r.NextFormatIsNull() 
+			isArrayNil, err := r.NextFormatIsNull()
 			if err != nil {
 				return err
 			}
@@ -81,11 +81,11 @@ func (m *Forum_ForumData) Read(r protopack.Reader) error {
 				m.Data = nil
 				continue
 			}
-			_DataLen, err := r.ReadArrayHeader();
+			_DataLen, err := r.ReadArrayHeader()
 			if err != nil {
 				return err
 			}
-			m.Data = make([]*Forum_PostData, _DataLen);
+			m.Data = make([]*Forum_PostData, _DataLen)
 			for arrayIndex := uint(0); arrayIndex < _DataLen; arrayIndex++ {
 				isNil, err := r.NextFormatIsNull()
 				if err != nil {

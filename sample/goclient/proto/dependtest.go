@@ -3,7 +3,7 @@
 package proto
 
 import (
-	protopack "github.com/yazawa-ichio/protoc-gen-msgpack/lib/golang"
+	protopack "github.com/yazawa-ichio/proto-to-serializable-msg/lib/golang"
 )
 
 type DependTest struct {
@@ -22,7 +22,7 @@ func (m *DependTest) Write(w protopack.Writer) error {
 	if err != nil {
 		return err
 	}
-	
+
 	// Write dep
 	err = w.WriteTag(1)
 	if err != nil {
@@ -36,7 +36,7 @@ func (m *DependTest) Write(w protopack.Writer) error {
 }
 
 // Unpack Serialize Message
-func (m *DependTest) Unpack(buf []byte) (error) {
+func (m *DependTest) Unpack(buf []byte) error {
 	return protopack.Unpack(m, buf)
 }
 

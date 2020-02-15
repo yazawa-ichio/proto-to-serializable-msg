@@ -8,7 +8,7 @@ import (
 
 	"github.com/jhump/protoreflect/desc"
 	"github.com/jhump/protoreflect/desc/protoparse"
-	ce "github.com/yazawa-ichio/protoc-gen-msgpack/code_emitter"
+	ce "github.com/yazawa-ichio/proto-to-serializable-msg/code_emitter"
 )
 
 func toCamel(s string, disableFirstToUpper bool) string {

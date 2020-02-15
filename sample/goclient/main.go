@@ -3,7 +3,7 @@ package main
 import (
 	"log"
 
-	proto "github.com/yazawa-ichio/protoc-gen-msgpack/sample/goclient/proto"
+	proto "github.com/yazawa-ichio/proto-to-serializable-msg/sample/goclient/proto"
 )
 
 func main() {

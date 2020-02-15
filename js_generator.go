@@ -6,7 +6,7 @@ import (
 	"strings"
 
 	"github.com/jhump/protoreflect/desc"
-	ce "github.com/yazawa-ichio/protoc-gen-msgpack/code_emitter"
+	ce "github.com/yazawa-ichio/proto-to-serializable-msg/code_emitter"
 )
 
 type JSGenerator struct {

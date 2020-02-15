@@ -3,7 +3,7 @@
 package proto
 
 import (
-	protopack "github.com/yazawa-ichio/protoc-gen-msgpack/lib/golang"
+	protopack "github.com/yazawa-ichio/proto-to-serializable-msg/lib/golang"
 )
 
 type Forum_User struct {
@@ -24,7 +24,7 @@ func (m *Forum_User) Write(w protopack.Writer) error {
 	if err != nil {
 		return err
 	}
-	
+
 	// Write Id
 	err = w.WriteTag(1)
 	if err != nil {
@@ -34,7 +34,7 @@ func (m *Forum_User) Write(w protopack.Writer) error {
 	if err != nil {
 		return err
 	}
-	
+
 	// Write Name
 	err = w.WriteTag(2)
 	if err != nil {
@@ -44,7 +44,7 @@ func (m *Forum_User) Write(w protopack.Writer) error {
 	if err != nil {
 		return err
 	}
-	
+
 	// Write Roll
 	err = w.WriteTag(3)
 	if err != nil {
@@ -58,7 +58,7 @@ func (m *Forum_User) Write(w protopack.Writer) error {
 }
 
 // Unpack Serialize Message
-func (m *Forum_User) Unpack(buf []byte) (error) {
+func (m *Forum_User) Unpack(buf []byte) error {
 	return protopack.Unpack(m, buf)
 }
 
@@ -80,13 +80,13 @@ func (m *Forum_User) Read(r protopack.Reader) error {
 
 		switch tag {
 		case 1: // Read Id
-			m.ID, err = r.ReadInt32();
+			m.ID, err = r.ReadInt32()
 			if err != nil {
 				return err
 			}
 			break
 		case 2: // Read Name
-			m.Name, err = r.ReadString();
+			m.Name, err = r.ReadString()
 			if err != nil {
 				return err
 			}

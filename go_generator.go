@@ -5,7 +5,7 @@ import (
 	"strings"
 
 	"github.com/jhump/protoreflect/desc"
-	ce "github.com/yazawa-ichio/protoc-gen-msgpack/code_emitter"
+	ce "github.com/yazawa-ichio/proto-to-serializable-msg/code_emitter"
 )
 
 type GOGenerator struct {
@@ -208,7 +208,7 @@ func (g *GOGenerator) emitImport(m *desc.MessageDescriptor) {
 	}
 	g.e.EmitLine("import (")
 	g.e.StartIndent()
-	g.e.EmitLine("protopack \"github.com/yazawa-ichio/protoc-gen-msgpack/lib/golang\"")
+	g.e.EmitLine("protopack \"github.com/yazawa-ichio/proto-to-serializable-msg/lib/golang\"")
 	for _, value := range hits {
 		g.e.EmitLine(value)
 	}

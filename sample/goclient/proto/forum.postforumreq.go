@@ -3,7 +3,7 @@
 package proto
 
 import (
-	protopack "github.com/yazawa-ichio/protoc-gen-msgpack/lib/golang"
+	protopack "github.com/yazawa-ichio/proto-to-serializable-msg/lib/golang"
 )
 
 type Forum_PostForumReq struct {
@@ -23,7 +23,7 @@ func (m *Forum_PostForumReq) Write(w protopack.Writer) error {
 	if err != nil {
 		return err
 	}
-	
+
 	// Write data
 	err = w.WriteTag(1)
 	if err != nil {
@@ -37,7 +37,7 @@ func (m *Forum_PostForumReq) Write(w protopack.Writer) error {
 }
 
 // Unpack Serialize Message
-func (m *Forum_PostForumReq) Unpack(buf []byte) (error) {
+func (m *Forum_PostForumReq) Unpack(buf []byte) error {
 	return protopack.Unpack(m, buf)
 }
 

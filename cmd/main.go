@@ -6,7 +6,7 @@ import (
 	"io/ioutil"
 	"path/filepath"
 
-	proto "github.com/yazawa-ichio/protoc-gen-msgpack"
+	proto "github.com/yazawa-ichio/proto-to-serializable-msg"
 )
 
 func main() {

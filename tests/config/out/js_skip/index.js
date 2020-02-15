@@ -1,9 +1,5 @@
 "use strict";
 
-exports.DependMessage = require("./dependmessage.js")
-
-exports.PackageMessage = require("./packagemessage.js")
-
 exports.AllParameter = require("./allparameter.js")
 
 exports.AllRepeatedParameter = require("./allrepeatedparameter.js")
@@ -28,6 +24,10 @@ exports.DependTest = require("./dependtest.js")
  *  comment
  */
 exports.TestEnum = require("./testenum.js")
+
+exports.DependMessage = require("./dependmessage.js")
+
+exports.PackageMessage = require("./packagemessage.js")
 
 exports.DepDep = require("./depdep")
 

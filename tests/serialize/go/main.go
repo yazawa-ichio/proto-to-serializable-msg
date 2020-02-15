@@ -7,8 +7,8 @@ import (
 	"log"
 	"net/http"
 
-	protopack "github.com/yazawa-ichio/protoc-gen-msgpack/lib/golang"
-	proto "github.com/yazawa-ichio/protoc-gen-msgpack/tests/serialize/go/proto"
+	protopack "github.com/yazawa-ichio/proto-to-serializable-msg/lib/golang"
+	proto "github.com/yazawa-ichio/proto-to-serializable-msg/tests/serialize/go/proto"
 )
 
 func main() {

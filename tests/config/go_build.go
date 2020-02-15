@@ -3,9 +3,9 @@ package main
 import (
 	"log"
 
-	proto_test "github.com/yazawa-ichio/protoc-gen-msgpack/tests/config/out/go"
-	proto_root_test "github.com/yazawa-ichio/protoc-gen-msgpack/tests/config/out/go_root"
-	proto_root_mypackage_test "github.com/yazawa-ichio/protoc-gen-msgpack/tests/config/out/go_root/mypackage"
+	proto_test "github.com/yazawa-ichio/proto-to-serializable-msg/tests/config/out/go"
+	proto_root_test "github.com/yazawa-ichio/proto-to-serializable-msg/tests/config/out/go_root"
+	proto_root_mypackage_test "github.com/yazawa-ichio/proto-to-serializable-msg/tests/config/out/go_root/mypackage"
 )
 
 func main() {

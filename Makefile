@@ -12,19 +12,19 @@ test-ts: tests-gen
 	cd tests/serialize/ts && tsc
 
 tests-gen:
-	cd cmd && go build -o ../bin/protoc-gen-msgpack
+	cd cmd && go build -o ../bin/proto-to-serializable-msg
 	rm -rf ./tests/serialize/cs/proto ./tests/serialize/go/proto ./tests/serialize/ts/proto
 	mkdir -p ./tests/serialize/cs/proto ./tests/serialize/go/proto ./tests/serialize/ts/proto
-	bin/protoc-gen-msgpack -l cs -i ./tests/proto -o ./tests/serialize/cs/proto
-	bin/protoc-gen-msgpack -l go -i ./tests/proto -o ./tests/serialize/go/proto
-	bin/protoc-gen-msgpack -l js -i ./tests/proto -o ./tests/serialize/ts/proto
-	bin/protoc-gen-msgpack -l ts -i ./tests/proto -o ./tests/serialize/ts/proto
+	bin/proto-to-serializable-msg -l cs -i ./tests/proto -o ./tests/serialize/cs/proto
+	bin/proto-to-serializable-msg -l go -i ./tests/proto -o ./tests/serialize/go/proto
+	bin/proto-to-serializable-msg -l js -i ./tests/proto -o ./tests/serialize/ts/proto
+	bin/proto-to-serializable-msg -l ts -i ./tests/proto -o ./tests/serialize/ts/proto
 
 tests-config:
-	cd cmd && go build -o ../bin/protoc-gen-msgpack
+	cd cmd && go build -o ../bin/proto-to-serializable-msg
 	rm -rf ./tests/config/out
 	cd ./tests/config && mkdir -p out/cs out/cs_prop out/go out/go_root out/js out/js_skip
-	bin/protoc-gen-msgpack -c tests/config/proto-config.yml
+	bin/proto-to-serializable-msg -c tests/config/proto-config.yml
 	cd ./tests/config && go build go_build.go
 	cd ./tests/config && npm install && ./node_modules/.bin/ts-node node.ts
 	cp ./tests/config/cs_* ./tests/config/out/cs
@@ -33,13 +33,13 @@ tests-config:
 	cd ./tests/config/out/cs_prop && dotnet build
 
 gen-sample:
-	cd cmd && go build -o ../bin/protoc-gen-msgpack
+	cd cmd && go build -o ../bin/proto-to-serializable-msg
 	rm -rf ./sample/client/proto ./sample/server/proto ./sample/goclient/proto
 	mkdir -p ./sample/client/proto ./sample/server/proto ./sample/goclient/proto
-	bin/protoc-gen-msgpack -l cs -i ./sample/proto -o ./sample/client/proto
-	bin/protoc-gen-msgpack -l js -i ./sample/proto -o ./sample/server/proto
-	bin/protoc-gen-msgpack -l ts -i ./sample/proto -o ./sample/server/proto
-	bin/protoc-gen-msgpack -l go -i ./sample/proto -o ./sample/goclient/proto
+	bin/proto-to-serializable-msg -l cs -i ./sample/proto -o ./sample/client/proto
+	bin/proto-to-serializable-msg -l js -i ./sample/proto -o ./sample/server/proto
+	bin/proto-to-serializable-msg -l ts -i ./sample/proto -o ./sample/server/proto
+	bin/proto-to-serializable-msg -l go -i ./sample/proto -o ./sample/goclient/proto
 
 run-sample: gen-sample;
 	node ./sample/server/index.js

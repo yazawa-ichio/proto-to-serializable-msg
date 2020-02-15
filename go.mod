@@ -1,4 +1,4 @@
-module github.com/yazawa-ichio/protoc-gen-msgpack
+module github.com/yazawa-ichio/proto-to-serializable-msg
 
 go 1.13
 

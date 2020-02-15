@@ -3,7 +3,7 @@
 package proto
 
 import (
-	protopack "github.com/yazawa-ichio/protoc-gen-msgpack/lib/golang"
+	protopack "github.com/yazawa-ichio/proto-to-serializable-msg/lib/golang"
 )
 
 type Forum_ForumInfo struct {
@@ -26,7 +26,7 @@ func (m *Forum_ForumInfo_ForumNestInfo) Write(w protopack.Writer) error {
 	if err != nil {
 		return err
 	}
-	
+
 	// Write user_post
 	err = w.WriteTag(1)
 	if err != nil {
@@ -58,7 +58,7 @@ func (m *Forum_ForumInfo_ForumNestInfo) Write(w protopack.Writer) error {
 }
 
 // Unpack Serialize Message
-func (m *Forum_ForumInfo_ForumNestInfo) Unpack(buf []byte) (error) {
+func (m *Forum_ForumInfo_ForumNestInfo) Unpack(buf []byte) error {
 	return protopack.Unpack(m, buf)
 }
 
@@ -80,7 +80,7 @@ func (m *Forum_ForumInfo_ForumNestInfo) Read(r protopack.Reader) error {
 
 		switch tag {
 		case 1: // Read user_post
-			isMapNil, err := r.NextFormatIsNull() 
+			isMapNil, err := r.NextFormatIsNull()
 			if err != nil {
 				return err
 			}
@@ -89,7 +89,7 @@ func (m *Forum_ForumInfo_ForumNestInfo) Read(r protopack.Reader) error {
 				m.UserPost = nil
 				continue
 			}
-			mapUserPostLen, err := r.ReadMapHeader();
+			mapUserPostLen, err := r.ReadMapHeader()
 			if err != nil {
 				return err
 			}
@@ -97,7 +97,7 @@ func (m *Forum_ForumInfo_ForumNestInfo) Read(r protopack.Reader) error {
 			for mapIndex := uint(0); mapIndex < mapUserPostLen; mapIndex++ {
 				var mapUserPostKey int32
 				var mapUserPostValue *Forum_PostData
-				mapUserPostKey, err = r.ReadInt32();
+				mapUserPostKey, err = r.ReadInt32()
 				if err != nil {
 					return err
 				}
@@ -115,7 +115,7 @@ func (m *Forum_ForumInfo_ForumNestInfo) Read(r protopack.Reader) error {
 				if err != nil {
 					return err
 				}
-				m.UserPost[mapUserPostKey] = mapUserPostValue;
+				m.UserPost[mapUserPostKey] = mapUserPostValue
 			}
 			break
 		default:
@@ -141,7 +141,7 @@ func (m *Forum_ForumInfo) Write(w protopack.Writer) error {
 	if err != nil {
 		return err
 	}
-	
+
 	// Write users
 	err = w.WriteTag(1)
 	if err != nil {
@@ -173,7 +173,7 @@ func (m *Forum_ForumInfo) Write(w protopack.Writer) error {
 }
 
 // Unpack Serialize Message
-func (m *Forum_ForumInfo) Unpack(buf []byte) (error) {
+func (m *Forum_ForumInfo) Unpack(buf []byte) error {
 	return protopack.Unpack(m, buf)
 }
 
@@ -195,7 +195,7 @@ func (m *Forum_ForumInfo) Read(r protopack.Reader) error {
 
 		switch tag {
 		case 1: // Read users
-			isMapNil, err := r.NextFormatIsNull() 
+			isMapNil, err := r.NextFormatIsNull()
 			if err != nil {
 				return err
 			}
@@ -204,7 +204,7 @@ func (m *Forum_ForumInfo) Read(r protopack.Reader) error {
 				m.Users = nil
 				continue
 			}
-			mapUsersLen, err := r.ReadMapHeader();
+			mapUsersLen, err := r.ReadMapHeader()
 			if err != nil {
 				return err
 			}
@@ -212,7 +212,7 @@ func (m *Forum_ForumInfo) Read(r protopack.Reader) error {
 			for mapIndex := uint(0); mapIndex < mapUsersLen; mapIndex++ {
 				var mapUsersKey int32
 				var mapUsersValue *Forum_User
-				mapUsersKey, err = r.ReadInt32();
+				mapUsersKey, err = r.ReadInt32()
 				if err != nil {
 					return err
 				}
@@ -230,7 +230,7 @@ func (m *Forum_ForumInfo) Read(r protopack.Reader) error {
 				if err != nil {
 					return err
 				}
-				m.Users[mapUsersKey] = mapUsersValue;
+				m.Users[mapUsersKey] = mapUsersValue
 			}
 			break
 		default:
