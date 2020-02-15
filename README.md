@@ -19,7 +19,7 @@ protoファイルを使うのであれば、gRPCを避ける必要がない気�
 
 ```
 # get
-go get github.com/yazawa-ichio/proto-to-serializable-msg
+go get github.com/yazawa-ichio/proto-to-serializable-msg/cmd/proto-to-serializable-msg
 # gen message
 proto-to-serializable-msg -lang cs -input ./input/proto -output ./out/proto
 # use Config

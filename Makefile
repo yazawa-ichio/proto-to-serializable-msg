@@ -11,8 +11,7 @@ tests-serialize: tests-gen
 test-ts: tests-gen
 	cd tests/serialize/ts && tsc
 
-tests-gen:
-	cd cmd && go build -o ../bin/proto-to-serializable-msg
+tests-gen: test-build
 	rm -rf ./tests/serialize/cs/proto ./tests/serialize/go/proto ./tests/serialize/ts/proto
 	mkdir -p ./tests/serialize/cs/proto ./tests/serialize/go/proto ./tests/serialize/ts/proto
 	bin/proto-to-serializable-msg -l cs -i ./tests/proto -o ./tests/serialize/cs/proto
@@ -20,8 +19,7 @@ tests-gen:
 	bin/proto-to-serializable-msg -l js -i ./tests/proto -o ./tests/serialize/ts/proto
 	bin/proto-to-serializable-msg -l ts -i ./tests/proto -o ./tests/serialize/ts/proto
 
-tests-config:
-	cd cmd && go build -o ../bin/proto-to-serializable-msg
+tests-config: test-build
 	rm -rf ./tests/config/out
 	cd ./tests/config && mkdir -p out/cs out/cs_prop out/go out/go_root out/js out/js_skip
 	bin/proto-to-serializable-msg -c tests/config/proto-config.yml
@@ -32,8 +30,7 @@ tests-config:
 	cd ./tests/config/out/cs && dotnet build
 	cd ./tests/config/out/cs_prop && dotnet build
 
-gen-sample:
-	cd cmd && go build -o ../bin/proto-to-serializable-msg
+gen-sample: test-build
 	rm -rf ./sample/client/proto ./sample/server/proto ./sample/goclient/proto
 	mkdir -p ./sample/client/proto ./sample/server/proto ./sample/goclient/proto
 	bin/proto-to-serializable-msg -l cs -i ./sample/proto -o ./sample/client/proto
@@ -56,3 +53,7 @@ run-sample-goclient: gen-sample;
 
 update-credits:
 	gocredits -w .
+
+test-build:
+	cd cmd/proto-to-serializable-msg && go build -o ../../bin/proto-to-serializable-msg
+
